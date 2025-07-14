@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include <stdio.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -31,12 +31,25 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define VERSION 1.0.0
+#define VERSION 1.0.1
+/*
+    1.0.1 sent pulses by setting CR1 (software trigger) in while loop
+       set CCR1 to control pulse width
 
-// 1.0.0 replicate https://controllerstech.com/stm32-timers-9-one-pulse-mode/
-//       set TIM1 time base to 0.25us
-//       successfully create a 10us pulse on PA8 after a delay of 2.5us when PA9 goes HI
+    1.0.0 replicate https://controllerstech.com/stm32-timers-9-one-pulse-mode/
+       set TIM1 time base to 0.25us
+       successfully create a 10us pulse on PA8 after a delay of 2.5us when PA9 goes HI
+*/
 /* USER CODE END PD */
+
+// user defined printf() diverted to UART4
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
+
+#define UART3_RXBUFFERSIZE 30
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -63,6 +76,7 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define TIMER1  htim1
 
 /* USER CODE END 0 */
 
@@ -103,10 +117,34 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t inc = 1;
   while (1)
   {
+//    uint16_t T1_EGR = TIMER1.Instance->EGR;
+    // printf("EGR %u\r\n", T1_EGR);
+    // TIMER1.Instance->EGR |= 0x1;  // set UG bit
+    TIMER1.Instance->CR1 |= 0x1;        // trigger the pulse
+
+    printf("\r\n\r\n\r\n\r\n");         // delay, to gives time for the pulse to complete before change the timer parameter
+
+    if(inc)
+    {
+        // inc the pulse width by decrement the CCR1
+        TIMER1.Instance->CCR1 -= 1;
+        if(TIMER1.Instance->CCR1 <= 10)
+            inc = 0;
+    }
+    else
+    {
+        // decc the pulse width by increment the CCR1
+        TIMER1.Instance->CCR1 += 1;
+        if(TIMER1.Instance->CCR1 >= 50)
+            inc = 1;
+    }
+
     /* USER CODE END WHILE */
 
+//    HAL_Delay(1);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
