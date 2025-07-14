@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define VERSION 1.0.1
+#define VERSION "1.0.1"
 /*
     1.0.1 sent pulses by setting CR1 (software trigger) in while loop
        set CCR1 to control pulse width
